@@ -1,5 +1,6 @@
 package net.mitask.requests;
 
+import com.google.gson.Gson;
 import gg.jte.TemplateEngine;
 import gg.jte.TemplateException;
 import gg.jte.output.Utf8ByteOutput;
@@ -128,15 +129,7 @@ public class HttpResponse {
         }
 
         Utf8ByteOutput output = new Utf8ByteOutput();
-
-        try {
-            templateEngine.render(templateName, parameters, output);
-        } catch (TemplateException e) {
-            setStatus(500);
-            sendText(e.getMessage());
-            return;
-        }
-
+        templateEngine.render(templateName, parameters, output);
         addHeader("Content-Type", "text/html");
         addHeader("Content-Length", output.getContentLength());
         writeHeaders();
@@ -144,12 +137,7 @@ public class HttpResponse {
     }
 
     public void redirect(String url) throws IOException {
-        sendCustom(302, "text/html", """
-                <html>
-                    <head>
-                        <meta http-equiv="Refresh" content="0; URL=%s" />
-                    </head>
-                </html>
-                """.formatted(url));
+        addHeader("Location", url);
+        sendCustom(302, "", "");
     }
 }

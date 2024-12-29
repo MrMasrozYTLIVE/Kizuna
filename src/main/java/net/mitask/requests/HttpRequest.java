@@ -1,6 +1,9 @@
 package net.mitask.requests;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import lombok.AllArgsConstructor;
+import net.mitask.util.HttpMethod;
 
 import java.util.Map;
 
@@ -11,7 +14,7 @@ import java.util.Map;
  */
 @AllArgsConstructor
 public class HttpRequest {
-    public final String method;
+    public final HttpMethod method;
     public final String path;
     public final Map<String, String> queryParams;
     public final Map<String, String> urlParams;
@@ -21,6 +24,8 @@ public class HttpRequest {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> toJson() {
+        if(method != HttpMethod.POST || body == null || body.isBlank()) return null;
+
         try {
             return new Gson().fromJson(body, Map.class);
         } catch (JsonSyntaxException e) {

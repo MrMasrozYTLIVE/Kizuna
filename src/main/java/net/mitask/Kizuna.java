@@ -18,10 +18,8 @@ import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.resolve.DirectoryCodeResolver;
 import lombok.Builder;
-import net.mitask.requests.HttpRequest;
-import net.mitask.requests.HttpResponse;
-import net.mitask.requests.Route;
-import net.mitask.requests.Router;
+import net.mitask.requests.*;
+import net.mitask.util.HttpMethod;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -34,9 +32,11 @@ public class Kizuna extends Router {
     private SSLContext sslContext;
     private final Path certificatePath, privateKeyPath;
     private final Route.RouteHandler notFoundHandler;
+    private final Route.AdvancedRouteHandler errorHandler;
+    private final List<Middleware.MiddlewareHandler> middlewares = new ArrayList<>();
 
     @Builder(setterPrefix = "set")
-    private Kizuna(int httpPort, int httpsPort, Path templatesDir, Path privateKeyPath, Path certificatePath, Route.RouteHandler notFoundHandler) throws Exception {
+    private Kizuna(int httpPort, int httpsPort, Path templatesDir, Path privateKeyPath, Path certificatePath, Route.RouteHandler notFoundHandler, Route.AdvancedRouteHandler errorHandler) throws Exception {
         if(httpPort == 0 && httpsPort == 0) throw new IllegalStateException("Server must enable at least HTTP or SSL (No ports specified!)");
 
         this.httpPort = httpPort;
@@ -131,19 +131,19 @@ public class Kizuna extends Router {
 
 
     private void startServerSocket(ServerSocket serverSocket, String protocol) {
-        try (serverSocket) {
+        try(serverSocket) {
             System.out.println(protocol + " server listening on port " + serverSocket.getLocalPort());
-            while (true) {
+            while(true) {
                 Socket clientSocket = serverSocket.accept();
                 executorService.submit(() -> handleClient(clientSocket));
             }
-        } catch (IOException e) {
+        } catch(IOException e) {
             e.printStackTrace();
         }
     }
 
     private void handleClient(Socket clientSocket) {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        try(BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))
         ) {
             String requestLine = in.readLine();
@@ -152,7 +152,7 @@ public class Kizuna extends Router {
             String[] requestParts = requestLine.split(" ");
             if (requestParts.length < 3) return;
 
-            String method = requestParts[0];
+            HttpMethod method = HttpMethod.valueOf(requestParts[0]);
             String fullPath = requestParts[1];
 
             String path = fullPath.split("\\?")[0];
@@ -163,35 +163,35 @@ public class Kizuna extends Router {
             Map<String, String> cookies = new HashMap<>();
 
             String line;
-            while (!(line = in.readLine()).isEmpty()) {
+            while(!(line = in.readLine()).isEmpty()) {
                 int colonIndex = line.indexOf(":");
-                if (colonIndex > 0) {
+                if(colonIndex > 0) {
                     String headerName = line.substring(0, colonIndex).trim();
                     String headerValue = line.substring(colonIndex + 1).trim();
                     headers.put(headerName, headerValue);
                 }
             }
 
-            if (headers.containsKey("Content-Length")) {
+            if(headers.containsKey("Content-Length")) {
                 int contentLength = Integer.parseInt(headers.get("Content-Length"));
                 char[] bodyChars = new char[contentLength];
                 in.read(bodyChars);
                 body = new String(bodyChars);
             }
 
-            if (headers.containsKey("Cookie")) {
-                for (String cookie : headers.get("Cookie").split("; ")) {
+            if(headers.containsKey("Cookie")) {
+                for(String cookie : headers.get("Cookie").split("; ")) {
                     String[] pair = cookie.split("=");
-                    if (pair.length != 2) continue;
+                    if(pair.length != 2) continue;
                     cookies.put(pair[0], pair[1]);
                 }
             }
 
-            if (fullPath.contains("?")) {
+            if(fullPath.contains("?")) {
                 String queryString = fullPath.split("\\?")[1];
-                for (String param : queryString.split("&")) {
+                for(String param : queryString.split("&")) {
                     String[] pair = param.split("=");
-                    if (pair.length != 2) continue;
+                    if(pair.length != 2) continue;
 
                     queryParams.put(URLDecoder.decode(pair[0], StandardCharsets.UTF_8), URLDecoder.decode(pair[1], StandardCharsets.UTF_8));
                 }
@@ -201,7 +201,7 @@ public class Kizuna extends Router {
             Map<String, String> urlParams = new HashMap<>();
 
             for (Route route : routes) {
-                if (route.getMethod().name().equalsIgnoreCase(method) && route.matches(path, urlParams)) {
+                if(route.getMethod() == method && route.matches(path, urlParams)) {
                     matchedRoute = route;
                     break;
                 }
@@ -217,8 +217,7 @@ public class Kizuna extends Router {
                     if(errorHandler != null) errorHandler.handle(request, response, e);
                 }
             } else {
-                if (notFoundHandler == null)
-                    response.sendCustom(404, "text/html", "<html><body>Page not found!</body></html>");
+                if(notFoundHandler == null) response.sendCustom(404, "text/html", "<html><body>File not found!</body></html>");
                 else notFoundHandler.handle(request, response);
             }
 
@@ -229,7 +228,7 @@ public class Kizuna extends Router {
         } finally {
             try {
                 clientSocket.close();
-            } catch (IOException e) {
+            } catch(IOException e) {
                 e.printStackTrace();
             }
         }

@@ -14,4 +14,6 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:${project.properties["lombok_version"]}")
 
     implementation("gg.jte:jte:${project.properties["jte_version"]}")
+
+    implementation("com.google.code.gson:gson:${project.properties["gson_version"]}")
 }

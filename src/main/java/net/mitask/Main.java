@@ -3,6 +3,7 @@ package net.mitask;
 import net.mitask.requests.Router;
 
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Map;
 
 public class Main {
@@ -13,8 +14,14 @@ public class Main {
                 .setTemplatesDir(Paths.get("templates"))
                 .setCertificatePath(Paths.get("public.crt"))
                 .setPrivateKeyPath(Paths.get("private.key"))
-//                .setNotFoundHandler((req, res) -> res.redirect("/hello"))
+//                .setNotFoundHandler((_, res) -> res.redirect("/hello"))
+                .setErrorHandler((_, res, data) -> {
+                    res.setStatus(500);
+                    res.sendText("Oops! Something went wrong!\n" + Arrays.toString(data));
+                })
                 .build();
+
+        app.serveStatic("/assets", Paths.get("assets/"));
 
         app.get("/", (_, res) -> {
 //            String str1 = Arrays.toString(req.headers.entrySet().toArray());
@@ -36,8 +43,35 @@ public class Main {
         });
         app.use("/user", userRouter);
 
-        app.post("/data", (req, res) -> res.sendText("Received: " + req.body));
+        app.post("/data", (req, res) -> {
+            System.out.println(req.toJson());
+            res.sendText("Received: " + req.body);
+        });
 
+        app.addMiddleware((req, res, chain) -> {
+            System.out.println("Request: " + req.method + " " + req.path);
+            chain.next(req, res);
+        });
+
+        app.addMiddleware((req, res, chain) -> {
+            if(!req.path.equalsIgnoreCase("/api/data")) {
+                chain.next(req, res);
+                return;
+            }
+
+            String apiKey = req.queryParams.get("apiKey");
+            if(!"12345".equals(apiKey)) {
+                res.setStatus(403);
+                res.sendText("Forbidden: Invalid API Key");
+            } else {
+                chain.next(req, res);
+            }
+        });
+
+        app.get("/api/data", (_, res) -> {
+            Map<String, String> data = Map.of("message", "Hello, world!");
+            res.sendJson(data);
+        });
 
         app.listen();
     }

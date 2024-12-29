@@ -39,4 +39,9 @@ public class Route {
     public interface RouteHandler {
         void handle(HttpRequest request, HttpResponse response) throws IOException;
     }
+
+    @FunctionalInterface
+    public interface AdvancedRouteHandler {
+        void handle(HttpRequest request, HttpResponse response, Object... data) throws IOException;
+    }
 }
