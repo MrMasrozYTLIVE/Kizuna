@@ -13,10 +13,14 @@ public class Main {
                 .setTemplatesDir(Paths.get("templates"))
                 .setCertificatePath(Paths.get("public.crt"))
                 .setPrivateKeyPath(Paths.get("private.key"))
-                .setNotFoundHandler((req, res) -> res.redirect("/hello"))
+//                .setNotFoundHandler((req, res) -> res.redirect("/hello"))
                 .build();
 
-        app.get("/", (req, res) -> {
+        app.get("/", (_, res) -> {
+//            String str1 = Arrays.toString(req.headers.entrySet().toArray());
+//            String str2 = Arrays.toString(req.cookies.entrySet().toArray());
+//            res.sendText(str1 + "\n\n" + str2);
+
             res.sendFile("index.html");
         });
 
@@ -32,9 +36,7 @@ public class Main {
         });
         app.use("/user", userRouter);
 
-        app.post("/data", (req, res) -> {
-            res.sendText("Received: " + req.body);
-        });
+        app.post("/data", (req, res) -> res.sendText("Received: " + req.body));
 
 
         app.listen();

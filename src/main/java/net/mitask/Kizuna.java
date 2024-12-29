@@ -25,6 +25,7 @@ import net.mitask.requests.Router;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLHandshakeException;
 
 public class Kizuna extends Router {
     private final int httpPort, httpsPort;
@@ -45,10 +46,16 @@ public class Kizuna extends Router {
         this.certificatePath = certificatePath;
         if(httpsPort != 0) configureSSL();
 
-        this.templateEngine = TemplateEngine.create(new DirectoryCodeResolver(templatesDir), ContentType.Html);
-        this.templateEngine.setBinaryStaticContent(true);
-        this.templateEngine.precompileAll();
+        TemplateEngine tempEngine = null;
+        if(templatesDir != null) {
+            tempEngine = TemplateEngine.create(new DirectoryCodeResolver(templatesDir), ContentType.Html);
+            tempEngine.setBinaryStaticContent(true);
+            tempEngine.precompileAll();
+        } else {
+            System.err.println("Due to TemplatesDir == null templateEngine (Rendering JTE templates) will not work!");
+        }
 
+        this.templateEngine = tempEngine;
         this.executorService = Executors.newCachedThreadPool();
         this.notFoundHandler = notFoundHandler;
     }
@@ -130,6 +137,7 @@ public class Kizuna extends Router {
             String body = "";
             Map<String, String> queryParams = new HashMap<>();
             Map<String, String> headers = new HashMap<>();
+            Map<String, String> cookies = new HashMap<>();
 
             String line;
             while (!(line = in.readLine()).isEmpty()) {
@@ -148,13 +156,21 @@ public class Kizuna extends Router {
                 body = new String(bodyChars);
             }
 
+            if (headers.containsKey("Cookie")) {
+                for (String cookie : headers.get("Cookie").split("; ")) {
+                    String[] pair = cookie.split("=");
+                    if (pair.length != 2) continue;
+                    cookies.put(pair[0], pair[1]);
+                }
+            }
+
             if (fullPath.contains("?")) {
                 String queryString = fullPath.split("\\?")[1];
                 for (String param : queryString.split("&")) {
                     String[] pair = param.split("=");
-                    if (pair.length == 2) {
-                        queryParams.put(URLDecoder.decode(pair[0], StandardCharsets.UTF_8), URLDecoder.decode(pair[1], StandardCharsets.UTF_8));
-                    }
+                    if (pair.length != 2) continue;
+
+                    queryParams.put(URLDecoder.decode(pair[0], StandardCharsets.UTF_8), URLDecoder.decode(pair[1], StandardCharsets.UTF_8));
                 }
             }
 
@@ -168,16 +184,18 @@ public class Kizuna extends Router {
                 }
             }
 
-            HttpRequest request = new HttpRequest(method, path, queryParams, body, urlParams);
+            HttpRequest request = new HttpRequest(method, path, queryParams, urlParams, body, headers, cookies);
             HttpResponse response = new HttpResponse(out, this.templateEngine);
             if (matchedRoute != null) {
                 matchedRoute.getHandler().handle(request, response);
             } else {
-                if(notFoundHandler == null) response.sendCustom(404, "text/html", "<html><body>Page not found!</body></html>");
+                if (notFoundHandler == null)
+                    response.sendCustom(404, "text/html", "<html><body>Page not found!</body></html>");
                 else notFoundHandler.handle(request, response);
             }
 
             out.flush();
+        } catch (SocketException | SSLHandshakeException ignored) {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
