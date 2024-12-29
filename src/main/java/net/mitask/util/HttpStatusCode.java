@@ -5,6 +5,8 @@ import java.util.Map;
 
 /**
  * Map of status code values and meanings.
+ * @author MiTask
+ * @since 1.0.0
  */
 public class HttpStatusCode {
     public static final Map<Integer, String> STATUS_CODES = new HashMap<>() {{

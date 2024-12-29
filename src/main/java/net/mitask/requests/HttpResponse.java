@@ -13,6 +13,12 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * This class is used to send response to the user.
+ * @since 1.0.0
+ * @author MiTask
+ */
+@SuppressWarnings("unused")
 public class HttpResponse {
     private final BufferedWriter out;
     private final TemplateEngine templateEngine;
@@ -24,14 +30,26 @@ public class HttpResponse {
         this.templateEngine = templateEngine;
     }
 
+    /**
+     * Sets integer status of the response
+     * @param statusCode See {@link net.mitask.util.HttpStatusCode}
+     */
     public void setStatus(int statusCode) {
         this.statusCode = statusCode;
     }
 
+    /**
+     * Adds a header to the response
+     * @param key Header key
+     * @param value Header value
+     */
     public void addHeader(String key, Object value) {
         headers.put(key, value);
     }
 
+    /**
+     * This is internal method to write all HTTP headers to the final response
+     */
     private void writeHeaders() throws IOException {
         String statusMessage = HttpStatusCode.STATUS_CODES.getOrDefault(statusCode, "");
         out.write("HTTP/1.1 " + statusCode + " " + statusMessage + "\r\n");

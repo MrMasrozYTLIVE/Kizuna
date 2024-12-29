@@ -2,6 +2,11 @@ package net.mitask.requests;
 
 import java.util.Map;
 
+/**
+ * This class contains all info from the received request
+ * @since 1.0.0
+ * @author MiTask
+ */
 public class HttpRequest {
     public final String method;
     public final String path;
