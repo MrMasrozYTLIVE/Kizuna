@@ -18,4 +18,13 @@ public class HttpRequest {
     public final String body;
     public final Map<String, String> headers;
     public final Map<String, String> cookies;
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> toJson() {
+        try {
+            return new Gson().fromJson(body, Map.class);
+        } catch (JsonSyntaxException e) {
+            return null;
+        }
+    }
 }
