@@ -58,6 +58,29 @@ public class Kizuna extends Router {
         this.templateEngine = tempEngine;
         this.executorService = Executors.newCachedThreadPool();
         this.notFoundHandler = notFoundHandler;
+        this.errorHandler = errorHandler;
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            executorService.shutdown();
+            System.out.println("Server shutting down...");
+        }));
+    }
+
+    public void addMiddleware(Middleware.MiddlewareHandler middleware) {
+        middlewares.add(middleware);
+    }
+
+    public void serveStatic(String basePath, Path staticDir) {
+        get(basePath + "/*", (req, res) -> {
+            String filePath = staticDir.toString() + req.path.replace(basePath, "");
+            Path path = Paths.get(filePath);
+            if(Files.exists(path) && !Files.isDirectory(path)) {
+                res.sendFile(path.toString());
+            } else {
+                if(notFoundHandler == null) res.sendCustom(404, "text/html", "<html><body>File not found!</body></html>");
+                else notFoundHandler.handle(req, res);
+            }
+        });
     }
 
     private void configureSSL() throws Exception {
