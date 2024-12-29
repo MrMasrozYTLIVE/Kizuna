@@ -186,8 +186,13 @@ public class Kizuna extends Router {
 
             HttpRequest request = new HttpRequest(method, path, queryParams, urlParams, body, headers, cookies);
             HttpResponse response = new HttpResponse(out, this.templateEngine);
-            if (matchedRoute != null) {
-                matchedRoute.getHandler().handle(request, response);
+            if(matchedRoute != null) {
+                Middleware chain = new Middleware(middlewares, matchedRoute.getHandler());
+                try {
+                    chain.next(request, response);
+                } catch (IOException e) {
+                    if(errorHandler != null) errorHandler.handle(request, response, e);
+                }
             } else {
                 if (notFoundHandler == null)
                     response.sendCustom(404, "text/html", "<html><body>Page not found!</body></html>");
