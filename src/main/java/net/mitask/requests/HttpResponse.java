@@ -90,6 +90,15 @@ public class HttpResponse {
         out.write(data);
     }
 
+    public void sendJson(Object data) throws IOException {
+        String json = new Gson().toJson(data);
+        setStatus(200);
+        addHeader("Content-Type", "application/json");
+        addHeader("Content-Length", json.length());
+        writeHeaders();
+        out.write(json);
+    }
+
     public void sendFile(String filePath) throws IOException {
         Path file = Path.of(filePath);
         if (Files.exists(file)) {
