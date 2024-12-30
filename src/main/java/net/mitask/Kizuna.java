@@ -143,8 +143,9 @@ public class Kizuna extends Router {
     }
 
     private void handleClient(Socket clientSocket) {
-        try(BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))
+        try(OutputStream rawOut = clientSocket.getOutputStream();
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(rawOut))
         ) {
             String requestLine = in.readLine();
             if (requestLine == null) return;
@@ -208,12 +209,15 @@ public class Kizuna extends Router {
             }
 
             HttpRequest request = new HttpRequest(method, path, queryParams, urlParams, body, headers, cookies);
-            HttpResponse response = new HttpResponse(out, this.templateEngine);
+            HttpResponse response = new HttpResponse(out, rawOut, this.templateEngine);
             if(matchedRoute != null) {
-                Middleware chain = new Middleware(middlewares, matchedRoute.getHandler());
+                List<Middleware.MiddlewareHandler> combinedMiddlewares = new ArrayList<>(middlewares);
+                combinedMiddlewares.addAll(matchedRoute.getMiddlewares());
+
+                Middleware chain = new Middleware(combinedMiddlewares, matchedRoute.getHandler());
                 try {
                     chain.next(request, response);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     if(errorHandler != null) errorHandler.handle(request, response, e);
                 }
             } else {

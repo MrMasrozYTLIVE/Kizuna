@@ -53,12 +53,10 @@ public class Main {
             chain.next(req, res);
         });
 
-        app.addMiddleware((req, res, chain) -> {
-            if(!req.path.equalsIgnoreCase("/api/data")) {
-                chain.next(req, res);
-                return;
-            }
-
+        app.get("/api/data", (_, res) -> {
+            Map<String, String> data = Map.of("message", "Hello, world!");
+            res.sendJson(data);
+        }).use((req, res, chain) -> {
             String apiKey = req.queryParams.get("apiKey");
             if(!"12345".equals(apiKey)) {
                 res.setStatus(403);
@@ -66,11 +64,6 @@ public class Main {
             } else {
                 chain.next(req, res);
             }
-        });
-
-        app.get("/api/data", (_, res) -> {
-            Map<String, String> data = Map.of("message", "Hello, world!");
-            res.sendJson(data);
         });
 
         app.listen();

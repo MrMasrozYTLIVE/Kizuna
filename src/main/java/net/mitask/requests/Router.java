@@ -8,12 +8,16 @@ import java.util.List;
 public class Router {
     protected final List<Route> routes = new ArrayList<>();
 
-    public void get(String path, Route.RouteHandler handler) {
-        routes.add(new Route(HttpMethod.GET, path, handler));
+    public Route get(String path, Route.RouteHandler handler) {
+        Route route = new Route(HttpMethod.GET, path, handler);
+        routes.add(route);
+        return route;
     }
 
-    public void post(String path, Route.RouteHandler handler) {
-        routes.add(new Route(HttpMethod.POST, path, handler));
+    public Route post(String path, Route.RouteHandler handler) {
+        Route route = new Route(HttpMethod.POST, path, handler);
+        routes.add(route);
+        return route;
     }
 
     public void use(String path, Router router) {

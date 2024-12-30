@@ -4,6 +4,8 @@ import lombok.Getter;
 import net.mitask.util.HttpMethod;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,12 +15,14 @@ public class Route {
     final Pattern compiledPattern;
     @Getter final HttpMethod method;
     @Getter final RouteHandler handler;
+    @Getter final List<Middleware.MiddlewareHandler> middlewares;
 
     public Route(HttpMethod method, String pathPattern, RouteHandler handler) {
         this.method = method;
         this.pathPattern = pathPattern;
         this.handler = handler;
         this.compiledPattern = Pattern.compile(pathPattern.replaceAll(":([a-zA-Z_][a-zA-Z0-9_]*)", "(?<$1>[^/]+)").replace("*", ".*"));
+        this.middlewares = new ArrayList<>();
     }
 
     public boolean matches(String path, Map<String, String> urlParams) {
@@ -33,6 +37,11 @@ public class Route {
         }
 
         return true;
+    }
+
+    public Route use(Middleware.MiddlewareHandler middleware) {
+        this.middlewares.add(middleware);
+        return this;
     }
 
     @FunctionalInterface

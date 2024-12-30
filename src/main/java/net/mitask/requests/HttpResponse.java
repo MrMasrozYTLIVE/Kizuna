@@ -2,12 +2,12 @@ package net.mitask.requests;
 
 import com.google.gson.Gson;
 import gg.jte.TemplateEngine;
-import gg.jte.TemplateException;
 import gg.jte.output.Utf8ByteOutput;
 import net.mitask.util.HttpStatusCode;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,13 +24,15 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class HttpResponse {
     private final BufferedWriter out;
+    private final OutputStream rawOut;
     private final TemplateEngine templateEngine;
     private final List<String> headers = new LinkedList<>();
     private final Map<String, Object> cookies = new LinkedHashMap<>();
     private int statusCode = 200;
 
-    public HttpResponse(BufferedWriter out, TemplateEngine templateEngine) {
+    public HttpResponse(BufferedWriter out, OutputStream rawOut, TemplateEngine templateEngine) {
         this.out = out;
+        this.rawOut = rawOut;
         this.templateEngine = templateEngine;
     }
 
@@ -61,7 +63,7 @@ public class HttpResponse {
     }
 
     /**
-     * This is internal method to write all HTTP headers to the final response
+     * This is internal method to write all HTTP headers to the final response through BufferedWriter
      */
     private void writeHeaders() throws IOException {
         String statusMessage = HttpStatusCode.STATUS_CODES.getOrDefault(statusCode, "");
@@ -74,6 +76,20 @@ public class HttpResponse {
             out.write("Set-Cookie: " + cookie.getKey() + "=" + cookie.getValue() + "\r\n");
         }
         out.write("\r\n");
+    }
+
+    /**
+     * This is internal method to write all HTTP headers to the final response through OutputStream
+     * (Used for Templates as they use UTF8ByteOutput from JTE)
+     */
+    private void writeRawHeaders() throws IOException {
+        String statusMessage = HttpStatusCode.STATUS_CODES.getOrDefault(statusCode, "");
+        rawOut.write(("HTTP/1.1 " + statusCode + " " + statusMessage + "\r\n").getBytes(StandardCharsets.UTF_8));
+        for (String header : headers) {
+            rawOut.write((header + "\r\n").getBytes(StandardCharsets.UTF_8));
+        }
+
+        rawOut.write("\r\n".getBytes(StandardCharsets.UTF_8));
     }
 
     public void sendText(String text) throws IOException {
@@ -132,8 +148,10 @@ public class HttpResponse {
         templateEngine.render(templateName, parameters, output);
         addHeader("Content-Type", "text/html");
         addHeader("Content-Length", output.getContentLength());
-        writeHeaders();
-        out.write(new String(output.toByteArray(), StandardCharsets.UTF_8));
+        writeRawHeaders();
+
+        rawOut.write(output.toByteArray());
+        rawOut.flush();
     }
 
     public void redirect(String url) throws IOException {
