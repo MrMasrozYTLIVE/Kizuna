@@ -23,12 +23,12 @@ public class Main {
 
         app.serveStatic("/assets", Paths.get("assets/"));
 
-        app.get("/", (_, res) -> {
-//            String str1 = Arrays.toString(req.headers.entrySet().toArray());
-//            String str2 = Arrays.toString(req.cookies.entrySet().toArray());
-//            res.sendText(str1 + "\n\n" + str2);
+        app.get("/", (req, res) -> {
+            String str1 = Arrays.toString(req.headers.entrySet().toArray());
+            String str2 = Arrays.toString(req.cookies.entrySet().toArray());
+            res.sendText(str1 + "\n\n" + str2 + "\n\n" + req.IP);
 
-            res.sendFile("index.html");
+//            res.sendFile("index.html");
         });
 
         app.get("/hello", (req, res) -> {

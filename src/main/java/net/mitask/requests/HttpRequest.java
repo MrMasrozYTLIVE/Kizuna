@@ -21,6 +21,7 @@ public class HttpRequest {
     public final String body;
     public final Map<String, String> headers;
     public final Map<String, String> cookies;
+    public final String IP;
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> toJson() {

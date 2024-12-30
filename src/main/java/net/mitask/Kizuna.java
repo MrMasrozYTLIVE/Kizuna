@@ -72,7 +72,7 @@ public class Kizuna extends Router {
 
     public void serveStatic(String basePath, Path staticDir) {
         get(basePath + "/*", (req, res) -> {
-            String filePath = staticDir.toString() + req.path.replace(basePath, "");
+            String filePath = staticDir.toString() + req.path.replace(basePath, "").replaceAll("..", ".");
             Path path = Paths.get(filePath);
             if(Files.exists(path) && !Files.isDirectory(path)) {
                 res.sendFile(path.toString());
@@ -208,7 +208,7 @@ public class Kizuna extends Router {
                 }
             }
 
-            HttpRequest request = new HttpRequest(method, path, queryParams, urlParams, body, headers, cookies);
+            HttpRequest request = new HttpRequest(method, path, queryParams, urlParams, body, headers, cookies, clientSocket.getInetAddress().getHostAddress());
             HttpResponse response = new HttpResponse(out, rawOut, this.templateEngine);
             if(matchedRoute != null) {
                 List<Middleware.MiddlewareHandler> combinedMiddlewares = new ArrayList<>(middlewares);
