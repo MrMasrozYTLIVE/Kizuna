@@ -1,4 +1,4 @@
-package net.mitask.util;
+package dev.mitask.util;
 
 import java.util.HashMap;
 import java.util.Map;

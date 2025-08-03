@@ -1,6 +1,6 @@
-package net.mitask;
+package dev.mitask;
 
-import net.mitask.requests.Router;
+import dev.mitask.requests.Router;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -14,8 +14,8 @@ public class Main {
                 .setTemplatesDir(Paths.get("templates"))
                 .setCertificatePath(Paths.get("public.crt"))
                 .setPrivateKeyPath(Paths.get("private.key"))
-//                .setNotFoundHandler((_, res) -> res.redirect("/hello"))
-                .setErrorHandler((_, res, data) -> {
+//                .setNotFoundHandler((req, res) -> res.redirect("/hello"))
+                .setErrorHandler((req, res, data) -> {
                     res.setStatus(500);
                     res.sendText("Oops! Something went wrong!\n" + Arrays.toString(data));
                 })
@@ -53,7 +53,7 @@ public class Main {
             chain.next(req, res);
         });
 
-        app.get("/api/data", (_, res) -> {
+        app.get("/api/data", (req, res) -> {
             Map<String, String> data = Map.of("message", "Hello, world!");
             res.sendJson(data);
         }).use((req, res, chain) -> {

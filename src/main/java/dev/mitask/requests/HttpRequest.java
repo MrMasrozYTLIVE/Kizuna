@@ -1,9 +1,9 @@
-package net.mitask.requests;
+package dev.mitask.requests;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import lombok.AllArgsConstructor;
-import net.mitask.util.HttpMethod;
+import dev.mitask.util.HttpMethod;
 
 import java.util.Map;
 

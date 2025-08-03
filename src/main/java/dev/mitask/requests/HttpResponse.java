@@ -1,9 +1,9 @@
-package net.mitask.requests;
+package dev.mitask.requests;
 
 import com.google.gson.Gson;
 import gg.jte.TemplateEngine;
 import gg.jte.output.Utf8ByteOutput;
-import net.mitask.util.HttpStatusCode;
+import dev.mitask.util.HttpStatusCode;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class HttpResponse {
 
     /**
      * Sets integer status of the response
-     * @param statusCode See {@link net.mitask.util.HttpStatusCode}
+     * @param statusCode See {@link HttpStatusCode}
      */
     public void setStatus(int statusCode) {
         this.statusCode = statusCode;

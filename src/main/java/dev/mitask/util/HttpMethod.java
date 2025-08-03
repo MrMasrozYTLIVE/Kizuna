@@ -1,4 +1,4 @@
-package net.mitask.util;
+package dev.mitask.util;
 
 /**
  * Enum with all currently supported HTTP methods
@@ -6,6 +6,13 @@ package net.mitask.util;
  * @since 1.0.0
  */
 public enum HttpMethod {
+    /**
+     * GET Method
+     */
     GET,
+
+    /**
+     * POST Method
+     */
     POST
 }

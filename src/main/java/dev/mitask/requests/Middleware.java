@@ -1,4 +1,4 @@
-package net.mitask.requests;
+package dev.mitask.requests;
 
 import java.io.IOException;
 import java.util.Iterator;

@@ -1,7 +1,7 @@
-package net.mitask.requests;
+package dev.mitask.requests;
 
 import lombok.Getter;
-import net.mitask.util.HttpMethod;
+import dev.mitask.util.HttpMethod;
 
 import java.io.IOException;
 import java.util.ArrayList;

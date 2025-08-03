@@ -1,6 +1,6 @@
-package net.mitask.requests;
+package dev.mitask.requests;
 
-import net.mitask.util.HttpMethod;
+import dev.mitask.util.HttpMethod;
 
 import java.util.ArrayList;
 import java.util.List;

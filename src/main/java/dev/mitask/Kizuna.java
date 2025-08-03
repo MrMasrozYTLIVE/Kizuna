@@ -1,4 +1,4 @@
-package net.mitask;
+package dev.mitask;
 
 import java.io.*;
 import java.net.*;
@@ -14,12 +14,13 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 import java.util.concurrent.*;
 
+import dev.mitask.requests.*;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.resolve.DirectoryCodeResolver;
 import lombok.Builder;
-import net.mitask.requests.*;
-import net.mitask.util.HttpMethod;
+import dev.mitask.requests.*;
+import dev.mitask.util.HttpMethod;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
